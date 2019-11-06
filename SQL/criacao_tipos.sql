@@ -50,12 +50,14 @@ CREATE OR REPLACE TYPE tp_generos AS VARRAY(5) OF tp_genero;
 
 CREATE OR REPLACE TYPE tp_musica AS OBJECT(
     ID NUMBER,
-    nome VARCHAR(255), 
-    duracao_segundos NUMBER,
+    nome VARCHAR(255),
     l_generos tp_generos,
     FINAL MAP MEMBER FUNCTION musicaToInt RETURN VARCHAR2,
     ORDER MEMBER FUNCTION comparaDuracao (X tp_musica) RETURN INTEGER
 );
+/
+
+ALTER TYPE tp_musica ADD ATTRIBYTE (duracao_segundos NUMBER) CASCADE;
 /
 
 CREATE OR REPLACE TYPE BODY tp_musica AS
@@ -69,4 +71,13 @@ begin
   RETURN SELF.duracao_segundos - X.duracao_segundos;
 end;
 END;
+/
+
+--INSERT table1 (approvaldate) VALUES (CONVERT(datetime,'18-06-12 10:34:09 PM',5));
+CREATE OR REPLACE TYPE tp_album AS OBJECT(
+    ID NUMBER,
+    nome VARCHAR2(255),
+    data_lancamento DATE,
+
+);
 /
