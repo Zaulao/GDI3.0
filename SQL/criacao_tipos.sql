@@ -1,0 +1,14 @@
+CREATE OR REPLACE TYPE tp_fone AS OBJECT(
+    NUMERO NUMBER
+);
+/
+
+CREATE OR REPLACE TYPE tp_nt_fone AS TABLE OF tp_fone;
+/
+
+create OR REPLACE TYPE tp_pessoa AS OBJECT(
+    nome VARCHAR2(255) NOT NULL,
+    ID NUMBER NOT NULL,
+    email VARCHAR2(255),
+)NOT FINAL;
+/
