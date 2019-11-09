@@ -38,7 +38,7 @@ CREATE OR REPLACE TYPE tp_artista UNDER tp_pessoa(
 /
 
 CREATE OR REPLACE TYPE tp_usuario UNDER tp_pessoa(
-    CONSTRUCTOR FUNCTION tp_artista (x1 tp_pessoa)
+    CONSTRUCTOR FUNCTION tp_usuario (x1 tp_pessoa)
         RETURN SELF AS RESULT,
     idade NUMBER
 );
@@ -62,6 +62,10 @@ OVERRIDING MEMBER FUNCTION comparaID (p tp_pessoa)  RETURN INTEGER IS
      end;
 end;
 /
+
+CREATE TABLE tb_usuario OF tp_usuario;
+
+INSERT INTO tb_usuario VALUES (tp_usuario("Luan", 1, "lab7@cin.ufpe.br", 21));
 
 CREATE OR REPLACE TYPE tp_genero AS OBJECT(
     genero VARCHAR(255)
