@@ -107,7 +107,8 @@ CREATE OR REPLACE TYPE tp_album AS OBJECT(
     nome VARCHAR2(255),
     data_lancamento DATE,
     FINAL MAP MEMBER FUNCTION albumOrderBy RETURN VARCHAR2,
-    musicas tp_nt_musica
+    musicas tp_nt_musica,
+    artista REF tp_artista
 );
 /
 
