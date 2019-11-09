@@ -79,7 +79,6 @@ CREATE OR REPLACE TYPE tp_musica AS OBJECT(
     ID NUMBER,
     nome VARCHAR(255),
     l_generos tp_generos,
-    FINAL MAP MEMBER FUNCTION musicaToInt RETURN VARCHAR2,
     ORDER MEMBER FUNCTION comparaDuracao (X tp_musica) RETURN INTEGER
 );
 /
@@ -88,11 +87,6 @@ ALTER TYPE tp_musica ADD ATTRIBUTE (duracao_segundos NUMBER) CASCADE;
 /
 
 CREATE OR REPLACE TYPE BODY tp_musica AS
-FINAL MAP MEMBER FUNCTION musicaToInt RETURN NUMBER IS
-    p NUMBER:= ID;
-    begin
-      RETURN p;
-    end;
 ORDER MEMBER FUNCTION comparaDuracao (X tp_musica) RETURN NUMBER IS
 begin
   RETURN SELF.duracao_segundos - X.duracao_segundos;
@@ -108,9 +102,17 @@ CREATE OR REPLACE TYPE tp_album AS OBJECT(
     ID NUMBER,
     nome VARCHAR2(255),
     data_lancamento DATE,
+    FINAL MAP MEMBER FUNCTION albumOrderBy RETURN VARCHAR2,
     musicas tp_nt_musica
 );
 /
+
+CREATE OR REPLACE TYPE BODY tp_album AS
+FINAL MAP MEMBER FUNCTION albumOrderBy RETURN VARCHAR2 IS
+    n VARCHAR2(255) := nome;
+    begin
+      RETURN n;
+    end;
 
 CREATE OR REPLACE TYPE tp_playlist AS OBJECT(
     nome VARCHAR2(255),
