@@ -30,12 +30,22 @@ CREATE OR REPLACE TYPE tp_contato AS OBJECT(
 );
 /
 
+CREATE TABLE tb_contato OF tp_contato NESTED TABLE fones STORE AS tb_lista_fones;
+
+INSERT INTO tb_contato VALUES ("www.contato-froid.com.br", tp_nt_fone(tp_fone(30404085), tp_fone(998167293)));
+
 CREATE OR REPLACE TYPE tp_artista UNDER tp_pessoa(
     CONSTRUCTOR FUNCTION tp_artista (x1 tp_pessoa)
         RETURN SELF AS RESULT,
-    contatos tp_contato
+    contato tb_contato
 );
 /
+
+CREATE TABLE tb_artista OF tp_artista;
+
+INSERT INTO tb_artista SELECT "Froid", 2, "froid@gmail.com", VALUE(c) FROM tb_contato c WHERE c.site = "www.contato-froid.com.br";
+
+SELECT a.nome, a.contato FROM tb_artista;
 
 CREATE OR REPLACE TYPE tp_usuario UNDER tp_pessoa(
     CONSTRUCTOR FUNCTION tp_usuario (x1 tp_pessoa)
@@ -77,7 +87,6 @@ CREATE OR REPLACE TYPE tp_genero2 AS OBJECT(
 /
 
 CREATE OR REPLACE TYPE tp_generos AS VARRAY(5) OF tp_genero;
-/
 
 CREATE OR REPLACE TYPE tp_musica AS OBJECT(
     ID NUMBER,
@@ -86,6 +95,12 @@ CREATE OR REPLACE TYPE tp_musica AS OBJECT(
     ORDER MEMBER FUNCTION comparaDuracao (X tp_musica) RETURN INTEGER
 );
 /
+
+CREATE TABLE tb_musica OF tp_musica;
+
+INSERT INTO tb_musica VALUES(1, "Franz Café", tp_generos(tp_genero("Rap"), tp_genero("Love song")));
+
+SELECT m.nome as Musica, m.l_generos as Generos_VARRAY FROM tb_musica m;
 
 ALTER TYPE tp_musica ADD ATTRIBUTE (duracao_segundos NUMBER) CASCADE;
 /
@@ -110,7 +125,21 @@ CREATE OR REPLACE TYPE tp_album AS OBJECT(
     musicas tp_nt_musica,
     artista REF tp_artista
 );
+
+NESTED TABLE musicas STORE AS lista_musicas_album;
 /
+
+CREATE TABLE tb_album OF tp_album;
+
+INSERT INTO tb_album VALUES (1, "O pior disco do ano", '18-05-2017', tp_nt_musica(
+        tp_musica(SELECT VALUE(m) FROM tb_musica m WHERE m.nome = "Franz Café"),
+    ), (SELECT REF(a) FROM tb_artista a WHERE a.nome = "Froid"));
+
+SELECT a.nome as Album, REF(a.artista) as Artista_OID FROM tb_album a WHERE a.nome = "O pior disco do ano";
+
+SELECT a.nome as Album, DEREF(a.artista) as Artista FROM tb_album a WHERE a.nome = "O pior disco do ano";
+
+SELECT VALUE(a) Album_objects FROM tb_album a;
 
 CREATE OR REPLACE TYPE BODY tp_album AS
 FINAL MAP MEMBER FUNCTION albumOrderBy RETURN VARCHAR2 IS
