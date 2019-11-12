@@ -129,7 +129,10 @@ CREATE OR REPLACE TYPE tp_album AS OBJECT(
 NESTED TABLE musicas STORE AS lista_musicas_album;
 /
 
-CREATE TABLE tb_album OF tp_album;
+CREATE TABLE tb_album OF tp_album(
+  album_id PRIMARY KEY,
+  artista WITH ROWID REFERENCES tb_artista
+);
 
 INSERT INTO tb_album VALUES (1, "O pior disco do ano", '18-05-2017', tp_nt_musica(
         tp_musica(SELECT VALUE(m) FROM tb_musica m WHERE m.nome = "Franz Café"),
