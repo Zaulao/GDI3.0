@@ -35,9 +35,9 @@ CREATE TABLE tb_contato OF tp_contato NESTED TABLE fones STORE AS tb_lista_fones
 INSERT INTO tb_contato VALUES ("www.contato-froid.com.br", tp_nt_fone(tp_fone(30404085), tp_fone(998167293)));
 
 CREATE OR REPLACE TYPE tp_artista UNDER tp_pessoa(
-    CONSTRUCTOR FUNCTION tp_artista (x1 tp_pessoa)
-        RETURN SELF AS RESULT,
-    contato tb_contato
+    -- CONSTRUCTOR FUNCTION tp_artista (x1 tp_pessoa)
+    --     RETURN SELF AS RESULT,
+    contato tp_contato
 );
 /
 
@@ -48,8 +48,8 @@ INSERT INTO tb_artista SELECT "Froid", 2, "froid@gmail.com", VALUE(c) FROM tb_co
 SELECT a.nome, a.contato FROM tb_artista;
 
 CREATE OR REPLACE TYPE tp_usuario UNDER tp_pessoa(
-    CONSTRUCTOR FUNCTION tp_usuario (x1 tp_pessoa)
-        RETURN SELF AS RESULT,
+    -- CONSTRUCTOR FUNCTION tp_usuario (x1 tp_pessoa)
+    --     RETURN SELF AS RESULT,
     idade NUMBER
 );
 /
@@ -75,12 +75,13 @@ end;
 
 CREATE TABLE tb_usuario OF tp_usuario;
 
-INSERT INTO tb_usuario VALUES (tp_usuario("Luan", 1, "lab7@cin.ufpe.br", 21));
+INSERT INTO tb_usuario VALUES (tp_usuario('Luan', 1, 'lab7@cin.ufpe.br', 21));
 
 CREATE OR REPLACE TYPE tp_genero AS OBJECT(
     genero VARCHAR(255)
 );
 /
+
 CREATE OR REPLACE TYPE tp_genero2 AS OBJECT(
     genero VARCHAR(244)
 )NOT INSTANTIABLE;
@@ -89,7 +90,7 @@ CREATE OR REPLACE TYPE tp_genero2 AS OBJECT(
 CREATE OR REPLACE TYPE tp_generos AS VARRAY(5) OF tp_genero;
 
 CREATE OR REPLACE TYPE tp_musica AS OBJECT(
-    ID NUMBER,
+    musica_id NUMBER,
     nome VARCHAR(255),
     l_generos tp_generos,
     ORDER MEMBER FUNCTION comparaDuracao (X tp_musica) RETURN INTEGER
@@ -103,7 +104,6 @@ INSERT INTO tb_musica VALUES(1, "Franz Café", tp_generos(tp_genero("Rap"), tp_g
 SELECT m.nome as Musica, m.l_generos as Generos_VARRAY FROM tb_musica m;
 
 ALTER TYPE tp_musica ADD ATTRIBUTE (duracao_segundos NUMBER) CASCADE;
-/
 
 CREATE OR REPLACE TYPE BODY tp_musica AS
 ORDER MEMBER FUNCTION comparaDuracao (X tp_musica) RETURN NUMBER IS
@@ -118,12 +118,12 @@ CREATE OR REPLACE TYPE tp_nt_musica AS TABLE OF tp_musica;
 
 --INSERT table1 (approvaldate) VALUES (CONVERT(date,'18-06-12', 5));
 CREATE OR REPLACE TYPE tp_album AS OBJECT(
-    ID NUMBER,
+    album_id NUMBER,
     nome VARCHAR2(255),
     data_lancamento DATE,
-    FINAL MAP MEMBER FUNCTION albumOrderBy RETURN VARCHAR2,
     musicas tp_nt_musica,
-    artista REF tp_artista
+    artista REF tp_artista,
+    FINAL MAP MEMBER FUNCTION albumOrderBy RETURN VARCHAR2
 );
 
 NESTED TABLE musicas STORE AS lista_musicas_album;
