@@ -37,15 +37,21 @@ INSERT INTO tb_contato VALUES ('www.contato-froid.com.br', tp_nt_fone(tp_fone(30
 CREATE OR REPLACE TYPE tp_artista UNDER tp_pessoa(
     -- CONSTRUCTOR FUNCTION tp_artista (x1 tp_pessoa)
     --     RETURN SELF AS RESULT,
-    contato tp_contato
+    contato REF tp_contato
 );
 /
 
 CREATE TABLE tb_artista OF tp_artista;
 
-INSERT INTO tb_artista SELECT 'Froid', 2, 'froid@gmail.com', VALUE(c) FROM tb_contato c WHERE c.site = 'www.contato-froid.com.br';
+INSERT INTO tb_artista SELECT 'Froid', 2, 'froid@gmail.com', REF(c) FROM tb_contato c WHERE c.site = 'www.contato-froid.com.br';
 
-SELECT a.nome, a.contato FROM tb_artista;
+SELECT C.site FROM tb_contato C WHERE REF(C) =
+(
+    SELECT TO CHAR(A.contato) FROM tb_artista A WHERE A.nome = 'Froid'
+            
+)
+
+SELECT CHAR(A.contato) FROM tb_artista A WHERE A.nome = 'Froid'; -- ERRO
 
 CREATE OR REPLACE TYPE tp_usuario UNDER tp_pessoa(
     -- CONSTRUCTOR FUNCTION tp_usuario (x1 tp_pessoa)
