@@ -3,7 +3,7 @@ CREATE OR REPLACE TYPE tp_pessoa AS OBJECT(
     ID NUMBER,
     email VARCHAR2(255),
     MEMBER FUNCTION comparaID (p tp_pessoa) RETURN INTEGER
-)NOT FINAL;
+) NOT FINAL NOT INSTANTIABLE;
 /
 
 CREATE OR REPLACE TYPE BODY tp_pessoa AS
@@ -45,14 +45,6 @@ CREATE TABLE tb_artista OF tp_artista;
 
 INSERT INTO tb_artista SELECT 'Froid', 2, 'froid@gmail.com', REF(c) FROM tb_contato c WHERE c.site = 'www.contato-froid.com.br';
 
-SELECT C.site FROM tb_contato C WHERE REF(C) =
-(
-    SELECT TO CHAR(A.contato) FROM tb_artista A WHERE A.nome = 'Froid'
-            
-)
-
-SELECT CHAR(A.contato) FROM tb_artista A WHERE A.nome = 'Froid'; -- ERRO
-
 CREATE OR REPLACE TYPE tp_usuario UNDER tp_pessoa(
     -- CONSTRUCTOR FUNCTION tp_usuario (x1 tp_pessoa)
     --     RETURN SELF AS RESULT,
@@ -79,10 +71,9 @@ OVERRIDING MEMBER FUNCTION comparaID (p tp_pessoa)  RETURN INTEGER IS
 end;
 /
 
-CREATE TABLE tb_usuario OF tp_usuario;
+-- CREATE TABLE tb_usuario OF tp_usuario;
 
-INSERT INTO tb_usuario VALUES (tp_usuario('Luan', 1, 'lab7@cin.ufpe.br', 21));
-
+-- INSERT INTO tb_usuario VALUES (tp_usuario('Luan', 1, 'lab7@cin.ufpe.br', 21));
 CREATE OR REPLACE TYPE tp_genero AS OBJECT(
     genero VARCHAR(255)
 );
@@ -90,7 +81,7 @@ CREATE OR REPLACE TYPE tp_genero AS OBJECT(
 
 CREATE OR REPLACE TYPE tp_genero2 AS OBJECT(
     genero VARCHAR(244)
-)NOT INSTANTIABLE;
+)NOT FINAL NOT INSTANTIABLE;
 /
 
 CREATE OR REPLACE TYPE tp_generos AS VARRAY(5) OF tp_genero;
@@ -122,29 +113,21 @@ END;
 CREATE OR REPLACE TYPE tp_nt_musica AS TABLE OF tp_musica;
 /
 
---INSERT table1 (approvaldate) VALUES (CONVERT(date,'18-06-12', 5));
+-- INSERT into table1 (approvaldate) VALUES (CONVERT(date,'18-06-12', 5)); -- erro tvz pq não haja table1
 CREATE OR REPLACE TYPE tp_album AS OBJECT(
     album_id NUMBER,
     nome VARCHAR2(255),
-    data_lancamento DATE,
+    data_lancamento VARCHAR2(255),
     musicas tp_nt_musica,
     artista REF tp_artista,
     FINAL MAP MEMBER FUNCTION albumOrderBy RETURN VARCHAR2
 );
 
-NESTED TABLE musicas STORE AS lista_musicas_album;
-/
+CREATE TABLE tb_album OF tp_album NESTED TABLE musicas STORE AS lista_musicas_album;
 
-CREATE TABLE tb_album OF tp_album(
-  album_id PRIMARY KEY,
-  artista WITH ROWID REFERENCES tb_artista
-);
-
-INSERT INTO tb_album VALUES (1, 'O pior disco do ano', '18-05-2017', tp_nt_musica(
-        tp_musica(SELECT VALUE(m) FROM tb_musica m WHERE m.nome = 'Franz Café'),
-    ), (SELECT REF(a) FROM tb_artista a WHERE a.nome = 'Froid'));
-
-SELECT a.nome as Album, REF(a.artista) as Artista_OID FROM tb_album a WHERE a.nome = 'O pior disco do ano';
+INSERT INTO tb_album VALUES (1, 'O pior disco do ano', '18-05-2017', tp_nt_musica(), (SELECT REF(aa) FROM tb_artista aa WHERE aa.nome = 'Froid'));
+    
+-- SELECT aa.nome as Album FROM tb_album aa WHERE aa.nome = 'O pior disco do ano';
 
 SELECT a.nome as Album, DEREF(a.artista) as Artista FROM tb_album a WHERE a.nome = 'O pior disco do ano';
 
