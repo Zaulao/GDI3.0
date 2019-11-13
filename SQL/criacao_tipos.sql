@@ -71,9 +71,9 @@ OVERRIDING MEMBER FUNCTION comparaID (p tp_pessoa)  RETURN INTEGER IS
 end;
 /
 
--- CREATE TABLE tb_usuario OF tp_usuario;
+CREATE TABLE tb_usuario OF tp_usuario;
 
--- INSERT INTO tb_usuario VALUES (tp_usuario('Luan', 1, 'lab7@cin.ufpe.br', 21));
+INSERT INTO tb_usuario VALUES (tp_usuario('Luan', 1, 'lab7@cin.ufpe.br', 21));
 CREATE OR REPLACE TYPE tp_genero AS OBJECT(
     genero VARCHAR(255)
 );
@@ -85,20 +85,21 @@ CREATE OR REPLACE TYPE tp_genero2 AS OBJECT(
 /
 
 CREATE OR REPLACE TYPE tp_generos AS VARRAY(5) OF tp_genero;
+CREATE OR REPLACE TYPE tp_nt_genero AS TABLE OF tp_genero;
 
 CREATE OR REPLACE TYPE tp_musica AS OBJECT(
     musica_id NUMBER,
     nome VARCHAR(255),
-    l_generos tp_generos,
+    generos tp_nt_genero,
     ORDER MEMBER FUNCTION comparaDuracao (X tp_musica) RETURN INTEGER
 );
 /
 
-CREATE TABLE tb_musica OF tp_musica;
+CREATE TABLE tb_musica OF tp_musica NESTED TABLE generos STORE AS generos;
 
-INSERT INTO tb_musica VALUES(1, 'Franz Café', tp_generos(tp_genero('Rap'), tp_genero('Love song')));
+INSERT INTO tb_musica VALUES(1, 'Franz Café', tp_nt_genero(tp_genero('Rap'), tp_genero('Love song')));
 
-SELECT m.nome as Musica, m.l_generos as Generos_VARRAY FROM tb_musica m;
+SELECT m.nome as Musica, m.generos as Generos_VARRAY FROM tb_musica m;
 
 ALTER TYPE tp_musica ADD ATTRIBUTE (duracao_segundos NUMBER) CASCADE;
 
@@ -110,7 +111,7 @@ end;
 END;
 /
 
-CREATE OR REPLACE TYPE tp_nt_musica AS TABLE OF tp_musica;
+CREATE OR REPLACE TYPE tp_nt_musica AS TABLE OF tp_musica
 /
 
 -- INSERT into table1 (approvaldate) VALUES (CONVERT(date,'18-06-12', 5)); -- erro tvz pq não haja table1
@@ -122,6 +123,7 @@ CREATE OR REPLACE TYPE tp_album AS OBJECT(
     artista REF tp_artista,
     FINAL MAP MEMBER FUNCTION albumOrderBy RETURN VARCHAR2
 );
+
 
 CREATE TABLE tb_album OF tp_album NESTED TABLE musicas STORE AS lista_musicas_album;
 
@@ -147,6 +149,8 @@ CREATE OR REPLACE TYPE tp_playlist AS OBJECT(
 );
 /
 
+ALTER TYPE tp_playlist ADD ATTRIBUTE playlist_id NUMBER CASCADE;
+
 CREATE OR REPLACE TYPE BODY tp_playlist AS
     MEMBER PROCEDURE alteraNome(SELF tp_playlist, novo_nome VARCHAR2(255)) IS
         BEGIN
@@ -157,3 +161,25 @@ END;
 
 ALTER TYPE tp_usuario ADD ATTRIBUTE (playlist tp_playlist) CASCADE;
 /
+
+create table tb_playlist(
+    playlist_id PRIMARY KEY
+) NESTED TABLE musicas STORE AS musicas;
+
+ALTER TYPE tp_musica DROP ATTRIBUTE l_generos CASCADE;
+
+ALTER TYPE tp_musica DROP ATTRIBUTE l_generos CASCADE;
+ALTER TYPE tp_musica ADD ATTRIBUTE (tb_generos tp_nt_genero) CASCADE;
+
+ALTER TYPE tp_album DROP ATTRIBUTE musicas
+
+CREATE TABLE tb_musica_2 of tp_musica NESTED TABLE tb_generos STORE AS generos_2;
+
+INSERT INTO tb_musica_2 VALUES(1, 'Franz Café', tp_nt_genero(tp_genero('Rap'), tp_genero('Love song')));
+
+CREATE TABLE tb_album_2 of tp_album NESTED TABLE musicas STORE AS musicas (NESTED TABLE tb_generos STORE AS generos);
+
+INSERT INTO tb_album VALUES (1, "O pior disco do ano", '18-05-2017', tp_nt_musica(
+        tp_musica(SELECT VALUE(m) FROM tb_musica m WHERE m.nome = "Franz Café"),
+    ), (SELECT REF(a) FROM tb_artista a WHERE a.nome = "Froid"));
+
