@@ -41,7 +41,12 @@ CREATE OR REPLACE TYPE tp_artista UNDER tp_pessoa(
 );
 /
 
-CREATE TABLE tb_artista OF tp_artista;
+CREATE TABLE tb_artista OF tp_artista(
+    nome NOT NULL,
+    ID PRIMARY KEY,
+    email NOT NULL,
+    contato SCOPE IS tb_contato
+) ;
 
 INSERT INTO tb_artista SELECT 'Froid', 2, 'froid@gmail.com', REF(c) FROM tb_contato c WHERE c.site = 'www.contato-froid.com.br';
 
@@ -114,20 +119,27 @@ END;
 CREATE OR REPLACE TYPE tp_nt_musica AS TABLE OF tp_musica
 /
 
+CREATE OR REPLACE TYPE l_musica_ref IS VARRAY(100) of REF tp_musica;
+
 -- INSERT into table1 (approvaldate) VALUES (CONVERT(date,'18-06-12', 5)); -- erro tvz pq não haja table1
 CREATE OR REPLACE TYPE tp_album AS OBJECT(
     album_id NUMBER,
     nome VARCHAR2(255),
     data_lancamento VARCHAR2(255),
-    musicas tp_nt_musica,
+    musicas l_musica_ref,
     artista REF tp_artista,
     FINAL MAP MEMBER FUNCTION albumOrderBy RETURN VARCHAR2
 );
 
+DROP TABLE tb_album;
 
-CREATE TABLE tb_album OF tp_album NESTED TABLE musicas STORE AS lista_musicas_album;
+CREATE TABLE tb_album OF tp_album(
+    album_id PRIMARY KEY,
+    nome NOT NULL,
+    artista WITH ROWID REFERENCES tb_artista
+);
 
-INSERT INTO tb_album VALUES (1, 'O pior disco do ano', '18-05-2017', tp_nt_musica(), (SELECT REF(aa) FROM tb_artista aa WHERE aa.nome = 'Froid'));
+INSERT INTO tb_album VALUES (1, 'O pior disco do ano', '18-05-2017', l_musica_ref(SELECT REF(mm) from tb_musica mm WHERE mm.musica_id = 1), (SELECT REF(aa) FROM tb_artista aa WHERE aa.nome = 'Froid'));
     
 -- SELECT aa.nome as Album FROM tb_album aa WHERE aa.nome = 'O pior disco do ano';
 
