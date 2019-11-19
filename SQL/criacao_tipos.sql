@@ -30,6 +30,7 @@ CREATE OR REPLACE TYPE tp_contato AS OBJECT(
 );
 /
 
+
 CREATE TABLE tb_contato OF tp_contato NESTED TABLE fones STORE AS tb_lista_fones;
 
 INSERT INTO tb_contato VALUES ('www.contato-froid.com.br', tp_nt_fone(tp_fone(30404085), tp_fone(998167293)));
@@ -48,7 +49,10 @@ CREATE TABLE tb_artista OF tp_artista(
     contato SCOPE IS tb_contato
 ) ;
 
+
 INSERT INTO tb_artista SELECT 'Froid', 2, 'froid@gmail.com', REF(c) FROM tb_contato c WHERE c.site = 'www.contato-froid.com.br';
+
+SELECT * FROM TABLE (SELECT FONES FROM tb_contato)
 
 CREATE OR REPLACE TYPE tp_usuario UNDER tp_pessoa(
     -- CONSTRUCTOR FUNCTION tp_usuario (x1 tp_pessoa)
@@ -194,4 +198,3 @@ CREATE TABLE tb_album_2 of tp_album NESTED TABLE musicas STORE AS musicas (NESTE
 INSERT INTO tb_album VALUES (1, "O pior disco do ano", '18-05-2017', tp_nt_musica(
         tp_musica(SELECT VALUE(m) FROM tb_musica m WHERE m.nome = "Franz Café"),
     ), (SELECT REF(a) FROM tb_artista a WHERE a.nome = "Froid"));
-
